@@ -432,12 +432,6 @@ export const studentsDatabase: StudentRecord[] = [
     message: "Selamat! Anda dinyatakan LULUS."
   },
   {
-    nisn: "0095085432",
-    name: "Muhammad Rizqi Romadhon",
-    status: "LULUS",
-    message: "Selamat! Anda dinyatakan LULUS."
-  },
-  {
     nisn: "3113392880",
     name: "Muhammad Zaifan",
     status: "LULUS",
