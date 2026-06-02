@@ -5,6 +5,7 @@ import { ResultCard } from './components/ResultCard';
 import { StudentResult, AnnouncementResponse } from './types';
 import { SchoolLogo } from './components/SchoolLogo';
 import { CountdownTimer } from './components/CountdownTimer';
+import { studentsDatabase } from './data/students';
 
 export default function App() {
   const [result, setResult] = useState<StudentResult | null>(null);
@@ -25,35 +26,29 @@ export default function App() {
     return () => clearInterval(interval);
   }, [targetTime]);
 
-  const handleCheckNisn = async (nisn: string) => {
+  const handleCheckNisn = (nisn: string) => {
     if (isLocked) {
-      setError('Pengumuman belum dirilis secara resmi.');
+      setError('Mohon maaf, pengumuman kelulusan belum dibuka resmi. Silakan tunggu hingga hitung mundur selesai.');
       return;
     }
     setIsLoading(true);
     setError(null);
     
-    try {
-      const response = await fetch('/api/pengumuman', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ nisn }),
-      });
+    // Simulate a brief, clean loading animation (600ms) to provide a professional experience
+    setTimeout(() => {
+      const match = studentsDatabase.find((s) => s.nisn === nisn.trim());
       
-      const data: AnnouncementResponse = await response.json();
-      
-      if (response.ok && data.success && data.data) {
-        setResult(data.data);
+      if (match) {
+        setResult({
+          name: match.name,
+          status: match.status,
+          message: match.message
+        });
       } else {
-        setError(data.error || 'Terjadi kesalahan pada sistem. Silakan coba lagi.');
+        setError('Data siswa dengan NISN tersebut tidak ditemukan. Silakan periksa kembali nomor NISN Anda.');
       }
-    } catch (err) {
-      setError('Gagal terhubung ke server. Periksa koneksi internet Anda.');
-    } finally {
       setIsLoading(false);
-    }
+    }, 600);
   };
 
   const handleBack = () => {
