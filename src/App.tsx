@@ -12,6 +12,12 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [logoError, setLogoError] = useState(false);
+  
+  // Admin Preview states
+  const [isAdminBypass, setIsAdminBypass] = useState(false);
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [adminPassword, setAdminPassword] = useState('');
+  const [adminError, setAdminError] = useState('');
 
   // Target: June 2, 2026 22:00 WIB (15:00 UTC)
   const targetTime = Date.UTC(2026, 5, 2, 15, 0, 0);
@@ -26,8 +32,10 @@ export default function App() {
     return () => clearInterval(interval);
   }, [targetTime]);
 
+  const effectiveLocked = isLocked && !isAdminBypass;
+
   const handleCheckNisn = (nisn: string) => {
-    if (isLocked) {
+    if (effectiveLocked) {
       setError('Mohon maaf, pengumuman kelulusan belum dibuka resmi. Silakan tunggu hingga hitung mundur selesai.');
       return;
     }
@@ -85,8 +93,30 @@ export default function App() {
             <p className="text-xs text-slate-400 uppercase tracking-widest mt-1">Dinas Pendidikan Kota Jambi</p>
           </div>
         </div>
-        <div className="px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-xs font-medium text-slate-300 whitespace-nowrap">
-          Tahun Ajaran 2025 / 2026
+        <div className="flex items-center gap-3">
+          {isAdminBypass ? (
+            <button 
+              onClick={() => setIsAdminBypass(false)}
+              className="px-4 py-2 bg-emerald-500/20 border border-emerald-500/35 text-emerald-300 rounded-full text-xs font-semibold hover:bg-emerald-500/30 transition-all flex items-center gap-1.5 shadow-lg shadow-emerald-950/20 cursor-pointer active:scale-95 animate-pulse"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              Mode Preview Aktif (Keluar)
+            </button>
+          ) : (
+            <button 
+              onClick={() => {
+                setAdminPassword('');
+                setAdminError('');
+                setShowAdminModal(true);
+              }}
+              className="px-4 py-2 bg-slate-800/60 hover:bg-slate-700/80 border border-white/10 rounded-full text-xs font-semibold text-slate-200 hover:text-white transition-all cursor-pointer shadow-lg shadow-slate-950/40 active:scale-95"
+            >
+              🔑 Akses Preview Guru
+            </button>
+          )}
+          <div className="px-4 py-2 bg-white/5 backdrop-blur-sm border border-white/10 rounded-full text-xs font-medium text-slate-300 whitespace-nowrap">
+            Tahun Ajaran 2025 / 2026
+          </div>
         </div>
       </header>
 
@@ -101,12 +131,18 @@ export default function App() {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ duration: 0.3 }}
               >
+                {isAdminBypass && (
+                  <div className="mb-4 bg-emerald-500/20 border border-emerald-500/30 rounded-2xl p-4 text-center text-xs text-emerald-300 font-medium leading-relaxed">
+                    ⚠️ <strong>MODE PREVIEW GURU/ADMIN AKTIF</strong><br />
+                    Membuka kunci sistem kelulusan untuk simulasi. Ketikkan NISN apa saja untuk menguji.
+                  </div>
+                )}
                 <CountdownTimer />
                 <LoginForm 
                   onSubmit={handleCheckNisn} 
                   isLoading={isLoading} 
                   error={error} 
-                  isLocked={isLocked}
+                  isLocked={effectiveLocked}
                 />
               </motion.div>
             ) : (
@@ -143,6 +179,82 @@ export default function App() {
           <p>Hak Cipta Dilindungi Undang-Undang.</p>
         </div>
       </footer>
+
+      {/* Admin Verification Modal */}
+      <AnimatePresence>
+        {showAdminModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            {/* Backdrop */}
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowAdminModal(false)}
+              className="absolute inset-0 bg-slate-950/85 backdrop-blur-md cursor-pointer"
+            />
+
+            {/* Modal Box */}
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.95, y: 15 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 15 }}
+              className="relative w-full max-w-sm bg-slate-900/90 border border-white/10 rounded-3xl p-6 shadow-2xl flex flex-col gap-4 text-slate-100 z-10"
+            >
+              <div className="text-center">
+                <span className="text-4xl block mb-2">🔑</span>
+                <h3 className="text-xl font-bold text-white">Mode Preview Guru</h3>
+                <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                  Gunakan fitur ini untuk melakukan simulasi pengecekan NISN siswa sebelum pintu pengumuman resmi dibuka.
+                </p>
+              </div>
+
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (adminPassword === "Admin123") {
+                    setIsAdminBypass(true);
+                    setShowAdminModal(false);
+                    setAdminError('');
+                  } else {
+                    setAdminError('Password salah!');
+                  }
+                }}
+                className="space-y-4 mt-2"
+              >
+                <div>
+                  <input 
+                    type="password"
+                    placeholder="Masukkan Password Admin"
+                    value={adminPassword}
+                    onChange={(e) => setAdminPassword(e.target.value)}
+                    className="w-full bg-slate-950/70 border border-white/15 rounded-xl py-3 px-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center text-sm font-medium"
+                    autoFocus
+                  />
+                  {adminError && (
+                    <p className="text-red-400 text-xs text-center mt-2 font-semibold">❌ {adminError}</p>
+                  )}
+                </div>
+
+                <div className="flex gap-2.5 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAdminModal(false)}
+                    className="flex-1 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold rounded-xl transition-all cursor-pointer border border-white/5"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold rounded-xl transition-all cursor-pointer border border-blue-400/20 shadow-lg shadow-blue-900/30"
+                  >
+                    Konfirmasi
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
