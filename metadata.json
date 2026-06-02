@@ -1,0 +1,6 @@
+{
+  "name": "Kelulusan SMPN 21 Jambi",
+  "description": "Portal Pengumuman Kelulusan Siswa SMPN 21 Kota Jambi Tahun Ajaran 2025/2026",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
